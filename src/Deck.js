@@ -4,7 +4,10 @@ import {
   Text,
   Animated,
   PanResponder,
+  Dimensions
 } from 'react-native';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 class Deck extends Component {
   constructor() {
@@ -30,10 +33,32 @@ class Deck extends Component {
       },
       /** lifecycle method: called when user removes the finger on screen */
       onPanResponderRelease: () => {
+        this.resetPosition();
       },
     });
 
     /* Note that Gesture System and Animated System are completely decoupled */
+  }
+
+  resetPosition() {
+    Animated.spring(this.position, {
+      toValue: {x: 0, y: 0}
+    }).start();
+  }
+
+  getCardStyle() {
+    const { x } = this.position;
+    const { top, left } = this.position.getLayout();
+    const rotateDeg = x.interpolate({ // use an Animated Value to interpolate
+      inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+      outputRange: ['-30deg', '0deg', '30deg'],
+    });
+
+    return {
+      top,
+      left,
+      transform: [{ rotate: rotateDeg }],
+    };
   }
 
   renderCards() {
@@ -43,7 +68,7 @@ class Deck extends Component {
         return (
           <Animated.View
             key={item.id}
-            style={this.position.getLayout()}
+            style={this.getCardStyle()}
             {...this.panResponder.panHandlers}
           >
             {card}
