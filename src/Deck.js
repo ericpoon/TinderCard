@@ -107,14 +107,14 @@ class Deck extends Component {
       return this.props.renderNoMoreCards();
     }
 
-    return data.map((item, index) => {
-      if (index < currentCardIndex) return null;
+    return data.map((item, i) => {
+      if (i < currentCardIndex) return null;
 
-      if (index === currentCardIndex) {
+      if (i === currentCardIndex) {
         return (
           <Animated.View
             key={item.id}
-            style={[styles.cardStyle, { zIndex: 99 }, this.getCardStyle()]}
+            style={[styles.cardStyle, this.getCardStyle()]}
             {...this.panResponder.panHandlers}
           >
             {this.props.renderCard(item)}
@@ -123,9 +123,19 @@ class Deck extends Component {
       }
 
       return (
-        <View key={item.id} style={[styles.cardStyle]}>
+        /* this leads to flashing images in the card,
+         * because the card stack gets re-rendered after swiping out a card,
+         * and the card in <View> will be promoted to <Animated.View> and this causes the re-rendering
+         * so we should use <Animated.View> instead of <View> here, even though we're not doing animation
+         * <View key={item.id} style={[styles.cardStyle]}>
+         *   {this.props.renderCard(item)}
+         * </View>
+         */
+
+        <Animated.View key={item.id} style={[styles.cardStyle, { top: (i - currentCardIndex) * 8 }]}>
           {this.props.renderCard(item)}
-        </View>
+        </Animated.View>
+
       );
     }).reverse();
   }
