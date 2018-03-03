@@ -4,12 +4,21 @@ import {
   Text,
   Animated,
   PanResponder,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+const SCREEN_WIDTH = Dimensions.get('window').width; // fixme: doesn't work for screen rotation
+const SWIPE_THRESHOLD = 0.3 * SCREEN_WIDTH;
+const SWIPE_OUT_DURATION = 250;
 
 class Deck extends Component {
+  static defaultProps = { // default props if user doesn't provide
+    onSwipeLeft: () => {},
+    onSwipeRight: () => {},
+  };
+
+  state = { currentCardIndex: 0 };
+
   constructor() {
     super();
 
@@ -28,12 +37,21 @@ class Deck extends Component {
          * the second time we access it, it doesn't remain the same value
          */
 
-        this.position.setValue({ x: gesture.dx, y: gesture.dy }); // set manually, instead of using any Animated timing function
+        this.position.setValue({ x: 0 + gesture.dx, y: 0 + gesture.dy }); // set manually, instead of using any Animated timing function
 
       },
       /** lifecycle method: called when user removes the finger on screen */
-      onPanResponderRelease: () => {
-        this.resetPosition();
+      onPanResponderRelease: (event, gesture) => {
+        console.log('released');
+        if (gesture.dx > SWIPE_THRESHOLD) {
+          console.log('swipe right');
+          this.swipeOut('right');
+        } else if (-gesture.dx > SWIPE_THRESHOLD) {
+          console.log('swipe left');
+          this.swipeOut('left');
+        } else {
+          this.resetPosition();
+        }
       },
     });
 
@@ -42,8 +60,30 @@ class Deck extends Component {
 
   resetPosition() {
     Animated.spring(this.position, {
-      toValue: {x: 0, y: 0}
+      toValue: { x: 0, y: 0 },
     }).start();
+  }
+
+  swipeOut(direction) {
+    const sign = direction.toLowerCase() === 'right' ? 1 : -1;
+
+    Animated.timing(this.position, {
+      toValue: ({ x: sign * SCREEN_WIDTH * 1.5, y: 0}),
+      duration: SWIPE_OUT_DURATION,
+    }).start(() => this.onSwipeOutComplete(direction));
+
+  }
+
+  onSwipeOutComplete(direction) {
+    const { onSwipeLeft, onSwipeRight, data } = this.props;
+    const item = data[this.state.currentCardIndex];
+
+    direction.toLowerCase() === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
+
+    console.log('going to the next');
+
+    this.position.setValue({ x: 0, y: 0 });
+    this.setState({ currentCardIndex: this.state.currentCardIndex + 1 });
   }
 
   getCardStyle() {
@@ -62,26 +102,45 @@ class Deck extends Component {
   }
 
   renderCards() {
+    const { currentCardIndex } = this.state;
+
     return this.props.data.map((item, index) => {
-      const card = this.props.renderCard(item);
-      if (index === 0) {
+      if (index < currentCardIndex) {
+        return null;
+      } else if (index === currentCardIndex) {
         return (
           <Animated.View
             key={item.id}
             style={this.getCardStyle()}
             {...this.panResponder.panHandlers}
           >
-            {card}
+            {this.props.renderCard(item)}
           </Animated.View>
         );
       } else {
         return (
-          <View key={item.id}>
-            {card}
+          <View
+            key={item.id}
+          >
+            {this.props.renderCard(item)}
           </View>
         );
       }
     });
+
+    // if (currentCardIndex >= this.props.data.length) return null;
+
+    // const cardData = this.props.data[currentCardIndex];
+    // const card = this.props.renderCard(cardData);
+
+    // return (
+    //   <Animated.View
+    //     style={this.getCardStyle()}
+    //     {...this.panResponder.panHandlers}
+    //   >
+    //     {card}
+    //   </Animated.View>
+    // );
   }
 
   render() {
