@@ -5,6 +5,8 @@ import {
   Animated,
   PanResponder,
   Dimensions,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width; // fixme: doesn't work for screen rotation
@@ -58,6 +60,13 @@ class Deck extends Component {
     });
 
     /* Note that Gesture System and Animated System are completely decoupled */
+  }
+
+  componentWillUpdate() {
+    // ----- specially for Android
+    UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
+    // -----
+    LayoutAnimation.spring(); /* animates every change in the component */
   }
 
   resetPosition() {
