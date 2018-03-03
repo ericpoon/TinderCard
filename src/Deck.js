@@ -107,7 +107,6 @@ class Deck extends Component {
       return this.props.renderNoMoreCards();
     }
 
-
     return data.map((item, index) => {
       if (index < currentCardIndex) return null;
 
@@ -115,7 +114,7 @@ class Deck extends Component {
         return (
           <Animated.View
             key={item.id}
-            style={this.getCardStyle()}
+            style={[styles.cardStyle, { zIndex: 99 }, this.getCardStyle()]}
             {...this.panResponder.panHandlers}
           >
             {this.props.renderCard(item)}
@@ -124,11 +123,11 @@ class Deck extends Component {
       }
 
       return (
-        <View key={item.id}>
+        <View key={item.id} style={[styles.cardStyle]}>
           {this.props.renderCard(item)}
         </View>
       );
-    });
+    }).reverse();
   }
 
   render() {
@@ -140,5 +139,17 @@ class Deck extends Component {
     );
   }
 }
+
+const styles = {
+  cardStyle: {
+    position: 'absolute',
+    width: '100%',
+
+    /* Do not use left and right here, as it conflicts when performing animation
+     * left: 0,
+     * right: 0,
+     * */
+  },
+};
 
 export default Deck;
