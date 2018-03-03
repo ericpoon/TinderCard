@@ -13,8 +13,10 @@ const SWIPE_OUT_DURATION = 250;
 
 class Deck extends Component {
   static defaultProps = { // default props if user doesn't provide
-    onSwipeLeft: () => {},
-    onSwipeRight: () => {},
+    onSwipeLeft: () => {
+    },
+    onSwipeRight: () => {
+    },
   };
 
   state = { currentCardIndex: 0 };
@@ -68,7 +70,7 @@ class Deck extends Component {
     const sign = direction.toLowerCase() === 'right' ? 1 : -1;
 
     Animated.timing(this.position, {
-      toValue: ({ x: sign * SCREEN_WIDTH * 1.5, y: 0}),
+      toValue: ({ x: sign * SCREEN_WIDTH * 1.5, y: 0 }),
       duration: SWIPE_OUT_DURATION,
     }).start(() => this.onSwipeOutComplete(direction));
 
@@ -79,9 +81,6 @@ class Deck extends Component {
     const item = data[this.state.currentCardIndex];
 
     direction.toLowerCase() === 'right' ? onSwipeRight(item) : onSwipeLeft(item);
-
-    console.log('going to the next');
-
     this.position.setValue({ x: 0, y: 0 });
     this.setState({ currentCardIndex: this.state.currentCardIndex + 1 });
   }
@@ -103,11 +102,16 @@ class Deck extends Component {
 
   renderCards() {
     const { currentCardIndex } = this.state;
+    const { data } = this.props;
+    if (currentCardIndex >= data.length) {
+      return this.props.renderNoMoreCards();
+    }
 
-    return this.props.data.map((item, index) => {
-      if (index < currentCardIndex) {
-        return null;
-      } else if (index === currentCardIndex) {
+
+    return data.map((item, index) => {
+      if (index < currentCardIndex) return null;
+
+      if (index === currentCardIndex) {
         return (
           <Animated.View
             key={item.id}
@@ -117,30 +121,14 @@ class Deck extends Component {
             {this.props.renderCard(item)}
           </Animated.View>
         );
-      } else {
-        return (
-          <View
-            key={item.id}
-          >
-            {this.props.renderCard(item)}
-          </View>
-        );
       }
+
+      return (
+        <View key={item.id}>
+          {this.props.renderCard(item)}
+        </View>
+      );
     });
-
-    // if (currentCardIndex >= this.props.data.length) return null;
-
-    // const cardData = this.props.data[currentCardIndex];
-    // const card = this.props.renderCard(cardData);
-
-    // return (
-    //   <Animated.View
-    //     style={this.getCardStyle()}
-    //     {...this.panResponder.panHandlers}
-    //   >
-    //     {card}
-    //   </Animated.View>
-    // );
   }
 
   render() {
