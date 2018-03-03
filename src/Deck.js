@@ -62,11 +62,19 @@ class Deck extends Component {
     /* Note that Gesture System and Animated System are completely decoupled */
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data !== this.props.data) { // compares if they are the exact same array inside memory, but this doesn't compare any of the internal objects
+      // when receive a new set of data, reset the current index to 0
+      this.setState({ currentCardIndex: 0 });
+    }
+  }
+
   componentWillUpdate() {
     // ----- specially for Android
     UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
     // -----
-    LayoutAnimation.spring(); /* animates every change in the component */
+    LayoutAnimation.spring();
+    /* animates every change in the component */
   }
 
   resetPosition() {
